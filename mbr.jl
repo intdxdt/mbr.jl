@@ -72,7 +72,7 @@ equals = function (this::MBR , other::MBR)
 end
 #=
  * @description is mbr null ?
- * @return booleanend
+ * @return bleanend
  =#
 function isnull(this::MBR) 
   return floatequal(height(this), 0.0) &&
@@ -107,53 +107,15 @@ end
  * @param other
  * @return MBRend
  =#
-function intersection(other) 
-  var minx = 0.0, miny = 0.0, maxx = 0.0, maxy = 0.0
-  if (this.intersects(other)) 
+function intersection(this::MBR, other::MBR) 
+  minx, miny, maxx , maxy = (0.0, 0.0, 0.0, 0.0)
+  if (intersects(this, other)) 
     minx = this.minx > other.minx ? this.minx : other.minx
     miny = this.miny > other.miny ? this.miny : other.miny
     maxx = this.maxx < other.maxx ? this.maxx : other.maxx
     maxy = this.maxy < other.maxy ? this.maxy : other.maxy
   end
-  return new MBR(minx, maxx, miny, maxy)
-end
-#=
- * @description true if the given point lies in or on the mbr.
- * @param xArray|Number|MBRend
- * @param [y]Numberend
- * @return booleanend
- =#
-contains = function (x, y) 
-  var bool = false
-  if (arguments.length == 1 && ispoint(x)) 
-    bool = _contains(this, x[0], x[1])
-  end
-  else if (arguments.length == 1 && x instanceof MBR) 
-    bool = _contains_mbr(this, x)
-  end
-  else if (arguments.length == 2 && isNumber(x)) 
-    bool = _contains(this, x, y)
-  end
-  return bool
-end
-#=
- * @description completely contains point(x, y) or xmbrend
- * @param xArray|Numberend
- * @param [y]Numberend
- * @return booleanend
- =#
-completely_contains = function (x, y) 
-  var bool = false
-  if (arguments.length == 1 && ispoint(x)) 
-    bool = _contains_complete(this, x[0], x[1])
-  end
-  else if (arguments.length == 1 && x instanceof MBR) 
-    bool = _contains_complete_mbr(this, x)
-  end
-  else if (arguments.length == 2 && isNumber(x)) 
-    bool = _contains_complete(this, x, y)
-  end
-  return bool
+  return MBR(minx, maxx, miny, maxy)
 end
 #=
  * @description true if the given point lies in or on the mbr.
@@ -161,96 +123,116 @@ end
  * @param xNumberend
  * @param yNumberend
  * @private
- * @return booleanend
+ * @return bleanend
  =#
-_contains = function (box, x, y) 
+function _contains(box::MBR, x::Real, y::Real) 
   return (x >= box.minx) &&
          (x <= box.maxx) &&
          (y >= box.miny) &&
          (y <= box.maxy)
 end
 #=
- * @description true if the given point lies in or on the mbr.
- * @param boxMBRend
- * @param xNumberend
- * @param yNumberend
- * @private
- * @return booleanend
- =#
-_contains_complete = function (box, x, y) 
-  return (x > box.minx) &&
-         (x < box.maxx) &&
-         (y > box.miny) &&
-         (y < box.maxy)
-end
-#=
  * @description contains mbr
  * @param box
  * @param other
- * @returns booleanend
+ * @returns bleanend
  * @private
  =#
-_contains_mbr = function (box, other) 
+function _contains_mbr(box::MBR, other::MBR) 
   return   (other.minx >= box.minx) &&
            (other.maxx <= box.maxx) &&
            (other.miny >= box.miny) &&
            (other.maxy <= box.maxy)
 end
 #=
+ * @description true if the given point lies in or on the mbr.
+ * @param xArray|Number|MBRend
+ * @param [y]Numberend
+ * @return bleanend
+ =#
+contains(this::MBR, x::Real, y::Real) =_contains(this, x, y)
+contains(this::MBR, x::Vector{Real}) = _contains(this, x[1], x[2])
+contains(this::MBR, x::MBR) =  _contains_mbr(this, x)
+
+#=
+ * @description true if the given point lies in or on the mbr.
+ * @param boxMBRend
+ * @param xNumberend
+ * @param yNumberend
+ * @private
+ * @return bleanend
+ =#
+function _contains_complete(box::MBR, x::Real, y::Real) 
+  return (x > box.minx) &&
+         (x < box.maxx) &&
+         (y > box.miny) &&
+         (y < box.maxy)
+end
+#=
  * @description contains complete other mbr (no boundary touch)
  * @param box
  * @param other
- * @returns booleanend
+ * @returns bleanend
  * @private
  =#
-_contains_complete_mbr = function (box, other) 
+function _contains_complete_mbr(box::MBR, other::MBR) 
   return   (other.minx > box.minx) &&
            (other.maxx < box.maxx) &&
            (other.miny > box.miny) &&
            (other.maxy < box.maxy)
 end
 #=
- * @description disjoint query
- * @param p1MBR|Arrayend
- * @param [p2]Arrayend
- * @param [q1]Arrayend
- * @param [q2]Arrayend
+ * @description completely contains point(x, y) or xmbrend
+ * @param xArray|Numberend
+ * @param [y]Numberend
+ * @return bleanend
  =#
-disjoint = function (p1, p2, q1, q2) 
-  return !intersects.apply(this, arguments)
+completely_contains(this::MBR, x::Real, y::Real) =_contains_complete(this, x, y)
+completely_contains(this::MBR, x::Vector{Real}) = _contains_complete(this, x[1], x[2])
+completely_contains(this::MBR, x::MBR) =  _contains_complete_mbr(this, x)
+
+#=
+ * @description disjoint query
+ * @param p1MBR|Array
+ * @param [p2]Array
+ * @param [q1]Array
+ * @param [q2]Array
+ =#
+function disjoint(this::MBR, p1, p2, q1, q2) 
+  return !intersects(this, p1, p2, q1, q2)
 end
 
 #=
  * @description intersect query
- * @param p1MBR|Arrayend
- * @param [p2]Arrayend
- * @param [q1]Arrayend
- * @param [q2]Arrayend
+ * @param p1MBR|Array
+ * @param [p2]Array
+ * @param [q1]Array
+ * @param [q2]Array
  =#
 intersects = function (p1, p2, q1, q2) 
-  var bool = false
+  bl = false
   if (arguments.length == 1 && (p1 instanceof MBR)) 
-    bool = _intersects1(this, p1)
+    bl = _intersects1(this, p1)
   end
   else if (arguments.length == 1 && ispoint(p1)) 
-    bool = _intersects2(this, p1)
+    bl = _intersects2(this, p1)
   end
   else if (arguments.length == 2 && (p1 instanceof MBR)) 
-    bool = _intersects2(p1, p2)
+    bl = _intersects2(p1, p2)
   end
   else if (arguments.length == 2 && ispoint(p1) && ispoint(p2)) 
-    bool = _intersects3_2(this, p1, p2)
+    bl = _intersects3_2(this, p1, p2)
   end
   else if (arguments.length == 3 && ispoint(p1)) 
-    bool = _intersects3(p1, p2, q1)
+    bl = _intersects3(p1, p2, q1)
   end
   else if (arguments.length == 4 && ispoint(p1)) 
-    bool = _intersects4(p1, p2, q1, q2)
+    bl = _intersects4(p1, p2, q1, q2)
   end
   else 
     throw new Error("invalid args mbr - intersects ")
   end
-  return bool
+  return bl
 end
 #=
  * @description check if the region defined by <code>other</code
@@ -258,7 +240,7 @@ end
  * @param boxMBRend
  * @param otherMBRend the <code>mbr</code> which this
  * <code>box</code> is being checked for overlap
- * @return booleanend
+ * @return bleanend
  =#
 _intersects1 = function (box, other) 
   #not disjoint
@@ -271,7 +253,7 @@ end
  @description intersects the mbr box by q1
  @param boxMBRend
  @param q the point to test for intersection
- @return booleanend - if q intersects the mbr
+ @return bleanend - if q intersects the mbr
  @private
  =#
 _intersects2 = function (box, q) 
@@ -282,11 +264,11 @@ end
  @param p1 one extremal point of the mbr
  @param p2 another extremal point of the mbr
  @param q1 the point to test for intersection
- @return booleanend - if q intersects the mbr p1-p2
+ @return bleanend - if q intersects the mbr p1-p2
  @private
  =#
 _intersects3 = function (p1, p2, q1) 
-  var x = 0, y = 1
+  x = 0, y = 1
   return (q1[x] >= Math.min(p1[x], p2[x])) &&
          (q1[x] <= Math.max(p1[x], p2[x])) &&
          (q1[y] >= Math.min(p1[y], p2[y])) &&
@@ -298,13 +280,13 @@ end
  * @param boxMBRend
  * @param q1 one extremal point of the mbr Q
  * @param q2 another extremal point of the mbr Q
- * @return booleanend - box intersects P
+ * @return bleanend - box intersects P
  * @private
  =#
 _intersects3_2 = function (box, q1, q2) 
-  var x = 0, y = 1
-  var minq = Math.min(q1[x], q2[x])
-  var maxq = Math.max(q1[x], q2[x])
+  x = 0, y = 1
+  minq = Math.min(q1[x], q2[x])
+  maxq = Math.max(q1[x], q2[x])
 
   if (box.minx > maxq || box.maxx < minq) 
     return false
@@ -322,15 +304,15 @@ end
  * @param p2 another extremal point of the mbr P
  * @param q1 one extremal point of the mbr Q
  * @param q2 another extremal point of the mbr Q
- * @return booleanend - <code>true</code> if Q intersects P
+ * @return bleanend - <code>true</code> if Q intersects P
  * @private
  =#
 _intersects4 = function (p1, p2, q1, q2) 
-  var x = 0, y = 1
-  var minq = Math.min(q1[x], q2[x])
-  var maxq = Math.max(q1[x], q2[x])
-  var minp = Math.min(p1[x], p2[x])
-  var maxp = Math.max(p1[x], p2[x])
+  x = 0, y = 1
+  minq = Math.min(q1[x], q2[x])
+  maxq = Math.max(q1[x], q2[x])
+  minp = Math.min(p1[x], p2[x])
+  maxp = Math.max(p1[x], p2[x])
 
   if (minp > maxq || maxp < minq) 
     return false
@@ -420,7 +402,7 @@ end
 #=
  * @description computes the coordinate of the centre of
  * this mbr
- * @return Arrayend - [x,y] the centre coordinate of this mbr
+ * @return Array - [x,y] the centre coordinate of this mbr
  =#
 centre = function () 
   return [
@@ -440,7 +422,7 @@ distance = function (other)
     return 0.0
   end
 
-  var dx = 0.0, dy = 0.0
+  dx = 0.0, dy = 0.0
   if (this.maxx < other.minx) 
     dx = other.minx - this.maxx
   end
