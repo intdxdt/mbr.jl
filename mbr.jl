@@ -2,7 +2,7 @@
  @module - MBR
  @description - minimum bounding this
  @author: titus
- @
+ @after - inspired by JTS Envelope - http://www.vividsolutions.com/jts/JTSHome.htm
 =#
 import Base.show
 
