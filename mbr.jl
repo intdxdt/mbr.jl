@@ -376,7 +376,7 @@ end
 
 #=
  * @description mbr to string
- * @return stringend
+ * @return wkt string
  =#
 function show() 
   return "POLYGON ((" * join([
