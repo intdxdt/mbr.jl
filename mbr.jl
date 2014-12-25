@@ -1,52 +1,45 @@
-#mbr.jl
-
 #=
  * @module - MBR
  * @description - minimum bounding this
  * author: titus
- * date: 15/11/14
- * time: 2:02 PM
 =#
+import Base.show
 
 #=
  * @description MBR
- * @param x1
- * @param x2
- * @param y1
- * @param y2
  * @type MBR
  =#
- type MBR
-	 	minx::Float64
-	 	maxx::Float64
-	 	miny::Float64
-	 	maxy::Float64
-	 	function MBR(x1::Float64, x2::Float64, y1::Float64, y2::Float64) 
-	 		this = new()
-		  if (x1 < x2) 
-		    this.minx = x1
-		    this.maxx = x2
-		  else 
-		    this.minx = x2
-		    this.maxx = x1
-		  end
+type MBR
+  minx::Float64
+  maxx::Float64
+  miny::Float64
+  maxy::Float64
+  function MBR(x1::Float64, x2::Float64, y1::Float64, y2::Float64) 
+  	this = new()
+    if (x1 < x2) 
+      this.minx = x1
+      this.maxx = x2
+    else 
+      this.minx = x2
+      this.maxx = x1
+    end
 
-		  if (y1 < y2) 
-		    this.miny = y1
-		    this.maxy = y2
-		  else 
-		    this.miny = y2
-		    this.maxy = y1
-		  end
-		  return this
-		end
- end
+    if (y1 < y2) 
+      this.miny = y1
+      this.maxy = y2
+    else 
+      this.miny = y2
+      this.maxy = y1
+    end
+    return this
+  end
+end
 
- function MBR(p1::Vector{Real}, p2::Vector{Real})
-    x1, y1 = float(p1[1]), float(p1[2])
-    x2, y2 = float(p2[1]), float(p2[2])
-    MBR(x1, x2, y1, y2)
- end 
+function MBR(p1::Vector{Real}, p2::Vector{Real})
+  x1, y1 = float(p1[1]), float(p1[2])
+  x2, y2 = float(p2[1]), float(p2[2])
+  MBR(x1, x2, y1, y2)
+end 
 MBR(box::MBR) = MBR(box.minx, box.maxx, box.miny, box.maxy)
 
 
@@ -72,7 +65,7 @@ equals = function (this::MBR , other::MBR)
 end
 #=
  * @description is mbr null ?
- * @return bleanend
+ * @return Bool
  =#
 function isnull(this::MBR) 
   return floatequal(height(this), 0.0) &&
@@ -119,77 +112,59 @@ function intersection(this::MBR, other::MBR)
 end
 #=
  * @description true if the given point lies in or on the mbr.
- * @param boxMBRend
- * @param xNumberend
- * @param yNumberend
- * @private
- * @return bleanend
+ * @return Bool
  =#
-function _contains(box::MBR, x::Real, y::Real) 
+function contains(this::MBR, x::Real, y::Real)
   return (x >= box.minx) &&
          (x <= box.maxx) &&
          (y >= box.miny) &&
          (y <= box.maxy)
 end
 #=
- * @description contains mbr
- * @param box
- * @param other
- * @returns bleanend
- * @private
+ * @description true if the given point lies in or on the mbr.
+ * @return Bool
  =#
-function _contains_mbr(box::MBR, other::MBR) 
-  return   (other.minx >= box.minx) &&
-           (other.maxx <= box.maxx) &&
-           (other.miny >= box.miny) &&
-           (other.maxy <= box.maxy)
+function contains(this::MBR, x::Vector{Real})
+  return contains(this, x[1], x[2])
 end
 #=
- * @description true if the given point lies in or on the mbr.
- * @param xArray|Number|MBRend
- * @param [y]Numberend
- * @return bleanend
+ * @description contains mbr
+ * @returns Bool
  =#
-contains(this::MBR, x::Real, y::Real) =_contains(this, x, y)
-contains(this::MBR, x::Vector{Real}) = _contains(this, x[1], x[2])
-contains(this::MBR, x::MBR) =  _contains_mbr(this, x)
+function contains(box::MBR, other::MBR) 
+  return  (other.minx >= box.minx) &&
+          (other.maxx <= box.maxx) &&
+          (other.miny >= box.miny) &&
+          (other.maxy <= box.maxy)
+end
 
 #=
  * @description true if the given point lies in or on the mbr.
- * @param boxMBRend
- * @param xNumberend
- * @param yNumberend
- * @private
- * @return bleanend
+ * @return Bool
  =#
-function _contains_complete(box::MBR, x::Real, y::Real) 
+function completely_contains(box::MBR, x::Real, y::Real) 
   return (x > box.minx) &&
          (x < box.maxx) &&
          (y > box.miny) &&
          (y < box.maxy)
 end
 #=
- * @description contains complete other mbr (no boundary touch)
- * @param box
- * @param other
- * @returns bleanend
- * @private
+ * @description intersect two mbrs.
+ * @return Bool
  =#
-function _contains_complete_mbr(box::MBR, other::MBR) 
+function completely_contains(this::MBR, x::Vector{Real})
+  return completely_contains(this, x[1], x[2])
+end
+#=
+ * @description contains completely other mbr (no boundary touch)
+ * @returns Bool
+ =#
+function completely_contains(box::MBR, other::MBR) 
   return   (other.minx > box.minx) &&
            (other.maxx < box.maxx) &&
            (other.miny > box.miny) &&
            (other.maxy < box.maxy)
 end
-#=
- * @description completely contains point(x, y) or xmbrend
- * @param xArray|Numberend
- * @param [y]Numberend
- * @return bleanend
- =#
-completely_contains(this::MBR, x::Real, y::Real) =_contains_complete(this, x, y)
-completely_contains(this::MBR, x::Vector{Real}) = _contains_complete(this, x[1], x[2])
-completely_contains(this::MBR, x::MBR) =  _contains_complete_mbr(this, x)
 
 #=
  * @description disjoint query
@@ -203,98 +178,69 @@ function disjoint(this::MBR, p1, p2, q1, q2)
 end
 
 #=
- * @description intersect query
- * @param p1MBR|Array
- * @param [p2]Array
- * @param [q1]Array
- * @param [q2]Array
- =#
-intersects = function (p1, p2, q1, q2) 
-  bl = false
-  if (arguments.length == 1 && (p1 instanceof MBR)) 
-    bl = _intersects1(this, p1)
-  end
-  else if (arguments.length == 1 && ispoint(p1)) 
-    bl = _intersects2(this, p1)
-  end
-  else if (arguments.length == 2 && (p1 instanceof MBR)) 
-    bl = _intersects2(p1, p2)
-  end
-  else if (arguments.length == 2 && ispoint(p1) && ispoint(p2)) 
-    bl = _intersects3_2(this, p1, p2)
-  end
-  else if (arguments.length == 3 && ispoint(p1)) 
-    bl = _intersects3(p1, p2, q1)
-  end
-  else if (arguments.length == 4 && ispoint(p1)) 
-    bl = _intersects4(p1, p2, q1, q2)
-  end
-  else 
-    throw new Error("invalid args mbr - intersects ")
-  end
-  return bl
-end
-#=
  * @description check if the region defined by <code>other</code
  * overlaps (intersects) the region of this <code>box</code>.
  * @param boxMBRend
  * @param otherMBRend the <code>mbr</code> which this
  * <code>box</code> is being checked for overlap
- * @return bleanend
+ * @return Bool
  =#
-_intersects1 = function (box, other) 
+function intersects(this::MBR, other::MBR) 
   #not disjoint
   return !(other.minx > box.maxx ||
            other.maxx < box.minx ||
            other.miny > box.maxy ||
            other.maxy < box.miny)
 end
+
 #=
- @description intersects the mbr box by q1
+ @description intersects the mbr box by pnt
  @param boxMBRend
  @param q the point to test for intersection
- @return bleanend - if q intersects the mbr
+ @return Bool - if q intersects the mbr
  @private
  =#
-_intersects2 = function (box, q) 
-  return _contains(box, q[0], q[1])
+function intersects(box::MBR, pnt::Vector{Real}) 
+  return contains(box, pnt[1], pnt[2])
 end
-#=
- @description intersects the mbr (p1-p2) box by q1
- @param p1 one extremal point of the mbr
- @param p2 another extremal point of the mbr
- @param q1 the point to test for intersection
- @return bleanend - if q intersects the mbr p1-p2
- @private
- =#
-_intersects3 = function (p1, p2, q1) 
-  x = 0, y = 1
-  return (q1[x] >= Math.min(p1[x], p2[x])) &&
-         (q1[x] <= Math.max(p1[x], p2[x])) &&
-         (q1[y] >= Math.min(p1[y], p2[y])) &&
-         (q1[y] <= Math.max(p1[y], p2[y]))
-end
+
 #=
  * @description test the mbr defined by box intersects
  * with the mbr defined by q1-q2
  * @param boxMBRend
  * @param q1 one extremal point of the mbr Q
  * @param q2 another extremal point of the mbr Q
- * @return bleanend - box intersects P
+ * @return Bool - box intersects P
  * @private
  =#
-_intersects3_2 = function (box, q1, q2) 
-  x = 0, y = 1
-  minq = Math.min(q1[x], q2[x])
-  maxq = Math.max(q1[x], q2[x])
+function intersects(box::MBR, q1::Vector{Real}, q2::Vector{Real}) 
+  x, y = 1, 2
+  minq = min(q1[x], q2[x])
+  maxq = max(q1[x], q2[x])
 
   if (box.minx > maxq || box.maxx < minq) 
     return false
   end
-  minq = Math.min(q1[y], q2[y])
-  maxq = Math.max(q1[y], q2[y])
+  minq = min(q1[y], q2[y])
+  maxq = max(q1[y], q2[y])
   #not disjoint
   return !(box.miny > maxq || box.maxy < minq)
+end
+
+#=
+ @description intersects the mbr (p1-p2) box by q1
+ @param p1 one extremal point of the mbr
+ @param p2 another extremal point of the mbr
+ @param q1 the point to test for intersection
+ @return Bool - if q intersects the mbr p1-p2
+ @private
+ =#
+function intersects(p1::Vector{Real}, p2::Vector{Real}, q1::Vector{Real}) 
+  x, y = 1, 2
+  return (q1[x] >= min(p1[x], p2[x])) &&
+         (q1[x] <= max(p1[x], p2[x])) &&
+         (q1[y] >= min(p1[y], p2[y])) &&
+         (q1[y] <= max(p1[y], p2[y]))
 end
 
 #=
@@ -304,73 +250,28 @@ end
  * @param p2 another extremal point of the mbr P
  * @param q1 one extremal point of the mbr Q
  * @param q2 another extremal point of the mbr Q
- * @return bleanend - <code>true</code> if Q intersects P
+ * @return Bool - true if Q (q1, q2) intersects P(p1, p2)
  * @private
  =#
-_intersects4 = function (p1, p2, q1, q2) 
-  x = 0, y = 1
-  minq = Math.min(q1[x], q2[x])
-  maxq = Math.max(q1[x], q2[x])
-  minp = Math.min(p1[x], p2[x])
-  maxp = Math.max(p1[x], p2[x])
+function intersects(p1, p2, q1, q2) 
+  x,y  = 1, 2
+  minq = min(q1[x], q2[x])
+  maxq = max(q1[x], q2[x])
+  minp = min(p1[x], p2[x])
+  maxp = max(p1[x], p2[x])
 
-  if (minp > maxq || maxp < minq) 
+  if minp > maxq || maxp < minq
     return false
   end
 
-  minq = Math.min(q1[y], q2[y])
-  maxq = Math.max(q1[y], q2[y])
-  minp = Math.min(p1[y], p2[y])
-  maxp = Math.max(p1[y], p2[y])
-
-  return !(minp > maxq || maxp < minq) #not disjoint
+  minq = min(q1[y], q2[y])
+  maxq = max(q1[y], q2[y])
+  minp = min(p1[y], p2[y])
+  maxp = max(p1[y], p2[y])
+  #not disjoint
+  return !(minp > maxq || maxp < minq) 
 end
 
-#=
- * @description expand mbr
- * @param x
- * @param y
- =#
-expand = function (x, y) 
-  if (arguments.length == 1 && ispoint(x)) 
-    _expandinclude(this, x[0], x[1])
-  end
-  else if (arguments.length == 1 && x instanceof MBR) 
-    _expandincludembr(this, x)
-  end
-  else if (arguments.length == 2) 
-    _expandinclude(this, x, y)
-  end
-end
-#=
- * @description expands this mbr by a given distance in all directions.
- * @param dx
- * @param dy
- =#
-expandby = function (dx, dy) 
-  this.minx -= dx
-  this.maxx += dx
-  this.miny -= dy
-  this.maxy += dy
-  #check for mbr disappearing
-  if (this.minx > this.maxx || this.miny > this.maxy) 
-    this.null()
-  end
-end
-#=
- * @description enlarges the boundary of the <code>mbr</code> so that it contains
- (x,y). Does nothing if (x,y) is already on or within the boundaries.
- * @param box
- * @param x
- * @param y
- * @private
- =#
-_expandinclude = function (box, x, y) 
-  x < box.minx && (box.minx = x)
-  x > box.maxx && (box.maxx = x)
-  y < box.miny && (box.miny = y)
-  y > box.maxy && (box.maxy = y)
-end
 #=
  * @description enlarges the boundary of the
  * mbr so that it contains other
@@ -378,12 +279,47 @@ end
  * @param other
  * @private
  =#
-_expandincludembr = function (box, other) 
+function expand(box::MBR, other::MBR) 
   other.minx < box.minx && (box.minx = other.minx)
   other.maxx > box.maxx && (box.maxx = other.maxx)
   other.miny < box.miny && (box.miny = other.miny)
   other.maxy > box.maxy && (box.maxy = other.maxy)
 end
+#=
+ @description enlarges the boundary of the <code>mbr</code> so that it contains
+ (x,y). Does nothing if (x,y) is already on or within the boundaries.
+ =#
+function expand(box::MBR, x::Real, y::Real)
+  x, y = float(x), float(y)
+  x < box.minx && (box.minx = x)
+  x > box.maxx && (box.maxx = x)
+  y < box.miny && (box.miny = y)
+  y > box.maxy && (box.maxy = y)
+end
+#=
+ @description expand mbr to include pnt
+ =#
+function expand(box::MBR, x::Vector{Real})
+  return expand(box, x[1], x[2])
+end
+ 
+#=
+ * @description expands this mbr by a given distance in all directions.
+ * @param dx - change in x
+ * @param dy - change in y
+ =#
+function expandby(this::MBR, dx::Real, dy::Real) 
+  this.minx -= dx
+  this.maxx += dx
+  this.miny -= dy
+  this.maxy += dy
+  #check for mbr disappearing
+  if (this.minx > this.maxx || this.miny > this.maxy) 
+    null(this)
+  end
+end
+
+
 #=
  * @description  translates this mbr by given
  * amounts in the X and Y direction. Returns a new mbr
@@ -391,8 +327,8 @@ end
  * @param dy - the amount to translate along the Y axis
  * @return MBRend
  =#
-translate = function (dx, dy) 
-  return new MBR(
+function translate(dx::Real, dy::Real) 
+  return MBR(
     this.minx + dx,
     this.maxx + dx,
     this.miny + dy,
@@ -404,7 +340,7 @@ end
  * this mbr
  * @return Array - [x,y] the centre coordinate of this mbr
  =#
-centre = function () 
+function centre() 
   return [
     (this.minx + this.maxx) / 2.0,
     (this.miny + this.maxy) / 2.0
@@ -417,25 +353,24 @@ end
  * @param otherMBRend
  * @return Numberend
  =#
-distance = function (other) 
-  if (this.intersects(other)) 
+function distance(this::MBR, other::MBR) 
+  if intersects(this, other)
     return 0.0
   end
 
-  dx = 0.0, dy = 0.0
-  if (this.maxx < other.minx) 
+  dx, dy = 0.0, 0.0
+  if this.maxx < other.minx
     dx = other.minx - this.maxx
-  end
-  else if (this.minx > other.maxx) 
+  elseif this.minx > other.maxx
     dx = this.minx - other.maxx
   end
 
-  if (this.maxy < other.miny) 
+  if this.maxy < other.miny
     dy = other.miny - this.maxy
-  end
-  else if (this.miny > other.maxy) 
+  elseif this.miny > other.maxy 
     dy = this.miny - other.maxy
   end
+
   return hypot(dx, dy)
 end
 
@@ -443,13 +378,13 @@ end
  * @description mbr to string
  * @return stringend
  =#
-toString = function () 
-  return "POLYGON ((" + [
-    this.minx + " " + this.miny,
-    this.minx + " " + this.maxy,
-    this.maxx + " " + this.maxy,
-    this.maxx + " " + this.miny,
-    this.minx + " " + this.miny
-  ].join(",") + "))"
+function show() 
+  return "POLYGON ((" * join([
+    string(this.minx) * " " * string(this.miny),
+    string(this.minx) * " " * string(this.maxy),
+    string(this.maxx) * " " * string(this.maxy),
+    string(this.maxx) * " " * string(this.miny),
+    string(this.minx) * " " * string(this.miny)
+  ],",") * "))"
 end
 
