@@ -1,7 +1,8 @@
 #=
- * @module - MBR
- * @description - minimum bounding this
- * author: titus
+ @module - MBR
+ @description - minimum bounding this
+ @author: titus
+ @
 =#
 import Base.show
 
@@ -35,12 +36,16 @@ type MBR
   end
 end
 
+#construct mbr from two points
 function MBR(p1::Vector{Real}, p2::Vector{Real})
   x1, y1 = float(p1[1]), float(p1[2])
   x2, y2 = float(p2[1]), float(p2[2])
-  MBR(x1, x2, y1, y2)
+  return MBR(x1, x2, y1, y2)
 end 
-MBR(box::MBR) = MBR(box.minx, box.maxx, box.miny, box.maxy)
+#copy mbr
+function MBR(box::MBR)
+  return MBR(box.minx, box.maxx, box.miny, box.maxy)
+end
 
 
 #=
@@ -51,13 +56,13 @@ function null(this::MBR)
   this.maxx = 0.0
   this.miny = 0.0
   this.maxy = 0.0
+  return this
 end
 #=
  * @description equals
- * @param other
- * @return *end
+ * @return Bool
  =#
-equals = function (this::MBR , other::MBR) 
+function equals(this::MBR , other::MBR) 
   return floatequal(this.maxx, other.maxx) &&
          floatequal(this.maxy, other.maxy) &&
          floatequal(this.minx, other.minx) &&
@@ -74,7 +79,7 @@ end
 #=
  * @description returns the difference between
  *  the maximum and minimum x values.
- * @return numberend
+ * @return Float64
  =#
 function width(this::MBR) 
   return this.maxx - this.minx
@@ -82,14 +87,14 @@ end
 #=
  * @description  returns the difference between
  *  the maximum and minimum y values.
- * @return numberend
+ * @return Float64
  =#
 function height(this::MBR) 
   return this.maxy - this.miny
 end
 #=
  * @description area
- * @returns numberend
+ * @returns Float64
  =#
 function area(this::MBR) 
   return height(this) * width(this)
@@ -97,8 +102,7 @@ end
 #=
  * @description computes the intersection
  * between this and other mbr
- * @param other
- * @return MBRend
+ * @return MBR
  =#
 function intersection(this::MBR, other::MBR) 
   minx, miny, maxx , maxy = (0.0, 0.0, 0.0, 0.0)
@@ -125,6 +129,9 @@ end
  * @return Bool
  =#
 function contains(this::MBR, x::Vector{Real})
+  return contains(this, x[1], x[2])
+end
+function contains(this::MBR, x::(Real,Real))
   return contains(this, x[1], x[2])
 end
 #=
@@ -155,6 +162,9 @@ end
 function completely_contains(this::MBR, x::Vector{Real})
   return completely_contains(this, x[1], x[2])
 end
+function completely_contains(this::MBR, x::(Real,Real))
+  return completely_contains(this, x[1], x[2])
+end
 #=
  * @description contains completely other mbr (no boundary touch)
  * @returns Bool
@@ -173,15 +183,35 @@ end
  * @param [q1]Array
  * @param [q2]Array
  =#
-function disjoint(this::MBR, p1, p2, q1, q2) 
-  return !intersects(this, p1, p2, q1, q2)
+disjoint(this::MBR, other::MBR)       =  !intersects(this, other)
+disjoint(box::MBR, pnt::Vector{Real}) =  !intersects(box, pnt)
+disjoint(box::MBR, pnt::(Real, Real)) =  !intersects(box, pnt)
+
+function disjoint(box::MBR, q1::Vector{Real}, q2::Vector{Real})
+  return !intersects(box, q1, q2)
+end
+
+function disjoint(p1::Vector{Real}, p2::Vector{Real}, q1::Vector{Real})
+  return !intersects(p1, p2, q1)
+end
+
+function disjoint(
+  p1::Vector{Real}, p2::Vector{Real}, 
+  q1::Vector{Real}, q2::Vector{Real})
+  return !intersects(p1, p2, q1, q2) 
+end
+
+function disjoint(
+    p1::(Real,Real), p2::(Real,Real), 
+    q1::(Real,Real), q2::(Real,Real))
+  return !intersects(p1, p2, q1, q2) 
 end
 
 #=
  * @description check if the region defined by <code>other</code
  * overlaps (intersects) the region of this <code>box</code>.
- * @param boxMBRend
- * @param otherMBRend the <code>mbr</code> which this
+ * @param boxMBR
+ * @param otherMBR the <code>mbr</code> which this
  * <code>box</code> is being checked for overlap
  * @return Bool
  =#
@@ -195,7 +225,7 @@ end
 
 #=
  @description intersects the mbr box by pnt
- @param boxMBRend
+ @param boxMBR
  @param q the point to test for intersection
  @return Bool - if q intersects the mbr
  @private
@@ -203,11 +233,13 @@ end
 function intersects(box::MBR, pnt::Vector{Real}) 
   return contains(box, pnt[1], pnt[2])
 end
-
+function intersects(box::MBR, pnt::(Real, Real)) 
+  return contains(box, pnt[1], pnt[2])
+end
 #=
  * @description test the mbr defined by box intersects
  * with the mbr defined by q1-q2
- * @param boxMBRend
+ * @param boxMBR
  * @param q1 one extremal point of the mbr Q
  * @param q2 another extremal point of the mbr Q
  * @return Bool - box intersects P
@@ -253,7 +285,9 @@ end
  * @return Bool - true if Q (q1, q2) intersects P(p1, p2)
  * @private
  =#
-function intersects(p1, p2, q1, q2) 
+function intersects(
+  p1::Vector{Real}, p2::Vector{Real}, 
+  q1::Vector{Real}, q2::Vector{Real}) 
   x,y  = 1, 2
   minq = min(q1[x], q2[x])
   maxq = max(q1[x], q2[x])
@@ -271,7 +305,14 @@ function intersects(p1, p2, q1, q2)
   #not disjoint
   return !(minp > maxq || maxp < minq) 
 end
-
+#=
+ * @description test the mbr defined by p1-p2 for intersection
+ =#
+function intersects(
+    p1::(Real,Real), p2::(Real,Real), 
+    q1::(Real,Real), q2::(Real,Real))
+  return intersects([p1...],[p2...],[p3...],[p4...])
+end
 #=
  * @description enlarges the boundary of the
  * mbr so that it contains other
@@ -296,6 +337,7 @@ function expand(box::MBR, x::Real, y::Real)
   y < box.miny && (box.miny = y)
   y > box.maxy && (box.maxy = y)
 end
+
 #=
  @description expand mbr to include pnt
  =#
@@ -319,13 +361,12 @@ function expandby(this::MBR, dx::Real, dy::Real)
   end
 end
 
-
 #=
  * @description  translates this mbr by given
  * amounts in the X and Y direction. Returns a new mbr
  * @param dx - the amount to translate along the X axis
  * @param dy - the amount to translate along the Y axis
- * @return MBRend
+ * @return MBR
  =#
 function translate(dx::Real, dy::Real) 
   return MBR(
@@ -335,6 +376,7 @@ function translate(dx::Real, dy::Real)
     this.maxy + dy
   )
 end
+
 #=
  * @description computes the coordinate of the centre of
  * this mbr
@@ -346,12 +388,13 @@ function centre()
     (this.miny + this.maxy) / 2.0
   ]
 end
+
 #=
  * @description  Computes the distance between this and another mbr
  * the distance between overlapping BBoxs is 0.  Otherwise, the
  * distance is the Euclidean distance between the closest points.
- * @param otherMBRend
- * @return Numberend
+ * @param otherMBR
+ * @return Float64
  =#
 function distance(this::MBR, other::MBR) 
   if intersects(this, other)
