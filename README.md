@@ -31,6 +31,13 @@ println (equals(m00, m1));
 println (isnull(intersection(m1, m2)));
 println (distance(m1, m2)); #hypot(2,3)
 
+#MBR(1.0,2.000045,1.0,2.00001)
+println(MBR((1, 1), (2.000045, 2.00001)))
+
+println (contains(m1, [1.5, 1.5])) #true
+println (completely_contains(m1, 1.5, 1.5)) #true
+
+#see test for more examples
 
 ```
 

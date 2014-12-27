@@ -18,3 +18,5 @@ println (equals(m00, m1));
 println (isnull(intersection(m1, m2)));
 println (distance(m1, m2));
 println (intersects(p1, p2, p3, p4))
+
+println(MBR((1, 1), (2.000045, 2.00001)))

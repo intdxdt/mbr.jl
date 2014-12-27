@@ -74,28 +74,29 @@ exports["test mbr"] = function test_mbr()
   @test ==(intersects(p1, p2, p3, p4), true);
   @test ==(intersects( p1, p2, p3), false);
   @test ==(contains(m1, [1, 1]), true);
-  # mbr11 = mbr([1, 1], [1.5, 1.5]);
-  # mbr12 = mbr([1, 1], [2, 2]);
-  # mbr13 = mbr([1, 1], [2.000045, 2.00001]);
-  # mbr14 = mbr([2.000045, 2.00001], [4.000045, 4.00001]);
-  # @test ==(m1.contains(mbr11), true);
-  # @test ==(m1.contains(mbr12), true);
-  # @test ==(m1.contains(mbr13), false);
 
-  # @test ==(m1.disjoint(mbr13), false); #false
-  # @test ==(m1.disjoint(mbr14), true); #true disjoint
+  mbr11 = mbr([1, 1], [1.5, 1.5]);
+  mbr12 = mbr([1, 1], [2, 2]);
+  mbr13 = mbr((1, 1), (2.000045, 2.00001));
+  mbr14 = mbr([2.000045, 2.00001], [4.000045, 4.00001]);
 
-  # @test ==(m1.contains([1.5, 1.5]), true);
-  # @test ==(m1.contains(1.5, 1.5), true);
-  # @test ==(m1.contains([2, 2]), true);
+  @test ==(contains(m1, mbr11), true);
+  @test ==(contains(m1, mbr12), true);
+  @test ==(contains(m1, mbr13), false);
 
-  # @test ==(m1.completely_contains(mbr11), true);
-  # @test ==(m1.completely_contains([1.5, 1.5]), true);
-  # @test ==(m1.completely_contains(1.5, 1.5), true);
-  # @test ==(m1.completely_contains([2, 2]), false);
-  # @test ==(m1.completely_contains(mbr12), false);
-  # @test ==(m1.completely_contains(mbr13), false);
-  # t.end();
+  @test ==(disjoint(m1, mbr13), false); #false
+  @test ==(disjoint(m1, mbr14), true); #true disjoint
+
+  @test ==(contains(m1, [1.5, 1.5]), true);
+  @test ==(contains(m1, 1.5, 1.5), true);
+  @test ==(contains(m1, (2, 2)), true);
+
+  @test ==(completely_contains(m1, mbr11), true);
+  @test ==(completely_contains(m1, [1.5, 1.5]), true);
+  @test ==(completely_contains(m1, 1.5, 1.5), true);
+  @test ==(completely_contains(m1, [2, 2]), false);
+  @test ==(completely_contains(m1, mbr12), false);
+  @test ==(completely_contains(m1, mbr13), false);
 end
 
 
