@@ -1,9 +1,10 @@
 #=
  @module - MBR
  @description - minimum bounding this
- @author: titus
+ @author: titus [(c) 2014 Titus Tienaah]
  @after - inspired by JTS Envelope - http://www.vividsolutions.com/jts/JTSHome.htm
 =#
+include("../floatequal.jl/floatequal.jl")
 import Base.show
 
 #=
@@ -37,11 +38,22 @@ type MBR
 end
 
 #construct mbr from two points
-function MBR(p1::Vector{Real}, p2::Vector{Real})
+function MBR(x1::Real, x2::Real, y1::Real, y2::Real) 
+  x1, y1 = float(x1), float(y1)
+  x2, y2 = float(x2), float(y2)
+  return MBR(x1, x2, y1, y2)
+end
+
+function MBR(p1::Vector, p2::Vector)
   x1, y1 = float(p1[1]), float(p1[2])
   x2, y2 = float(p2[1]), float(p2[2])
   return MBR(x1, x2, y1, y2)
-end 
+end
+
+function MBR(p1::(Real,Real), p2::(Real,Real))
+  return MBR([p1...], [p2...])
+end
+
 #copy mbr
 function MBR(box::MBR)
   return MBR(box.minx, box.maxx, box.miny, box.maxy)
@@ -118,7 +130,7 @@ end
  * @description true if the given point lies in or on the mbr.
  * @return Bool
  =#
-function contains(this::MBR, x::Real, y::Real)
+function contains(box::MBR, x::Real, y::Real)
   return (x >= box.minx) &&
          (x <= box.maxx) &&
          (y >= box.miny) &&
@@ -128,7 +140,7 @@ end
  * @description true if the given point lies in or on the mbr.
  * @return Bool
  =#
-function contains(this::MBR, x::Vector{Real})
+function contains(this::MBR, x::Vector)
   return contains(this, x[1], x[2])
 end
 function contains(this::MBR, x::(Real,Real))
@@ -159,7 +171,7 @@ end
  * @description intersect two mbrs.
  * @return Bool
  =#
-function completely_contains(this::MBR, x::Vector{Real})
+function completely_contains(this::MBR, x::Vector)
   return completely_contains(this, x[1], x[2])
 end
 function completely_contains(this::MBR, x::(Real,Real))
@@ -184,20 +196,20 @@ end
  * @param [q2]Array
  =#
 disjoint(this::MBR, other::MBR)       =  !intersects(this, other)
-disjoint(box::MBR, pnt::Vector{Real}) =  !intersects(box, pnt)
+disjoint(box::MBR, pnt::Vector) =  !intersects(box, pnt)
 disjoint(box::MBR, pnt::(Real, Real)) =  !intersects(box, pnt)
 
-function disjoint(box::MBR, q1::Vector{Real}, q2::Vector{Real})
+function disjoint(box::MBR, q1::Vector, q2::Vector)
   return !intersects(box, q1, q2)
 end
 
-function disjoint(p1::Vector{Real}, p2::Vector{Real}, q1::Vector{Real})
+function disjoint(p1::Vector, p2::Vector, q1::Vector)
   return !intersects(p1, p2, q1)
 end
 
 function disjoint(
-  p1::Vector{Real}, p2::Vector{Real}, 
-  q1::Vector{Real}, q2::Vector{Real})
+  p1::Vector, p2::Vector, 
+  q1::Vector, q2::Vector)
   return !intersects(p1, p2, q1, q2) 
 end
 
@@ -210,12 +222,12 @@ end
 #=
  * @description check if the region defined by <code>other</code
  * overlaps (intersects) the region of this <code>box</code>.
- * @param boxMBR
- * @param otherMBR the <code>mbr</code> which this
+ * @param box::MBR
+ * @param other::MBR the <code>mbr</code> which this
  * <code>box</code> is being checked for overlap
  * @return Bool
  =#
-function intersects(this::MBR, other::MBR) 
+function intersects(box::MBR, other::MBR) 
   #not disjoint
   return !(other.minx > box.maxx ||
            other.maxx < box.minx ||
@@ -230,7 +242,7 @@ end
  @return Bool - if q intersects the mbr
  @private
  =#
-function intersects(box::MBR, pnt::Vector{Real}) 
+function intersects(box::MBR, pnt::Vector) 
   return contains(box, pnt[1], pnt[2])
 end
 function intersects(box::MBR, pnt::(Real, Real)) 
@@ -245,7 +257,7 @@ end
  * @return Bool - box intersects P
  * @private
  =#
-function intersects(box::MBR, q1::Vector{Real}, q2::Vector{Real}) 
+function intersects(box::MBR, q1::Vector, q2::Vector) 
   x, y = 1, 2
   minq = min(q1[x], q2[x])
   maxq = max(q1[x], q2[x])
@@ -267,7 +279,7 @@ end
  @return Bool - if q intersects the mbr p1-p2
  @private
  =#
-function intersects(p1::Vector{Real}, p2::Vector{Real}, q1::Vector{Real}) 
+function intersects(p1::Vector, p2::Vector, q1::Vector) 
   x, y = 1, 2
   return (q1[x] >= min(p1[x], p2[x])) &&
          (q1[x] <= max(p1[x], p2[x])) &&
@@ -286,8 +298,8 @@ end
  * @private
  =#
 function intersects(
-  p1::Vector{Real}, p2::Vector{Real}, 
-  q1::Vector{Real}, q2::Vector{Real}) 
+  p1::Vector, p2::Vector, 
+  q1::Vector, q2::Vector) 
   x,y  = 1, 2
   minq = min(q1[x], q2[x])
   maxq = max(q1[x], q2[x])
@@ -341,7 +353,7 @@ end
 #=
  @description expand mbr to include pnt
  =#
-function expand(box::MBR, x::Vector{Real})
+function expand(box::MBR, x::Vector)
   return expand(box, x[1], x[2])
 end
  
